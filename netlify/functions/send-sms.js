@@ -20,16 +20,28 @@ exports.handler = async function(event, context) {
     };
   }
 
-  // Extract phone number from Vapi function call payload
+  // Log the full payload so we can debug
+  console.log('Full Vapi payload:', JSON.stringify(body, null, 2));
+
+  // Vapi can send the phone number in several places — check all of them
   const callerPhone =
     body?.message?.toolCallList?.[0]?.function?.arguments?.phone_number ||
+    body?.message?.toolCalls?.[0]?.function?.arguments?.phone_number ||
+    body?.tool_call?.function?.arguments?.phone_number ||
+    body?.function?.arguments?.phone_number ||
+    body?.arguments?.phone_number ||
     body?.phone_number ||
     null;
+
+  console.log('Extracted phone number:', callerPhone);
 
   if (!callerPhone) {
     return {
       statusCode: 400,
-      body: JSON.stringify({ error: 'No phone number provided' })
+      body: JSON.stringify({
+        error: 'No phone number provided',
+        received: body
+      })
     };
   }
 
@@ -72,5 +84,7 @@ exports.handler = async function(event, context) {
       statusCode: 500,
       body: JSON.stringify({ error: err.message })
     };
+  }
+};
   }
 };
