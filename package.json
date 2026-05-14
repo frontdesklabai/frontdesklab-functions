@@ -1,0 +1,8 @@
+{
+  "name": "frontdesklab-functions",
+  "version": "1.0.0",
+  "description": "Netlify serverless functions for FrontDesk Lab Vapi integration",
+  "dependencies": {
+    "twilio": "^4.23.0"
+  }
+}
