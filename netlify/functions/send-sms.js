@@ -1,7 +1,6 @@
 const twilio = require('twilio');
 
 exports.handler = async function(event, context) {
-  // Only allow POST requests
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
@@ -9,7 +8,6 @@ exports.handler = async function(event, context) {
     };
   }
 
-  // Parse the request body
   let body;
   try {
     body = JSON.parse(event.body);
@@ -20,10 +18,8 @@ exports.handler = async function(event, context) {
     };
   }
 
-  // Log the full payload so we can debug
   console.log('Full Vapi payload:', JSON.stringify(body, null, 2));
 
-  // Vapi can send the phone number in several places — check all of them
   const callerPhone =
     body?.message?.toolCallList?.[0]?.function?.arguments?.phone_number ||
     body?.message?.toolCalls?.[0]?.function?.arguments?.phone_number ||
@@ -36,26 +32,22 @@ exports.handler = async function(event, context) {
   console.log('Extracted phone number:', callerPhone);
 
   if (!callerPhone) {
+    console.log('No phone number found. Body was:', JSON.stringify(body, null, 2));
     return {
       statusCode: 400,
-      body: JSON.stringify({
-        error: 'No phone number provided',
-        received: body
-      })
+      body: JSON.stringify({ error: 'No phone number provided', received: body })
     };
   }
 
-  // Load credentials from environment variables
   const accountSid   = process.env.TWILIO_ACCOUNT_SID;
   const authToken    = process.env.TWILIO_AUTH_TOKEN;
   const fromNumber   = process.env.TWILIO_PHONE_NUMBER;
   const calendlyLink = process.env.CALENDLY_LINK;
 
-  // Validate env vars are set
   if (!accountSid || !authToken || !fromNumber || !calendlyLink) {
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Server misconfiguration: missing environment variables' })
+      body: JSON.stringify({ error: 'Missing environment variables' })
     };
   }
 
@@ -68,14 +60,11 @@ exports.handler = async function(event, context) {
       to: callerPhone
     });
 
-    console.log(`SMS sent successfully. SID: ${message.sid}`);
+    console.log('SMS sent. SID:', message.sid);
 
     return {
       statusCode: 200,
-      body: JSON.stringify({
-        result: 'SMS sent successfully',
-        messageSid: message.sid
-      })
+      body: JSON.stringify({ result: 'SMS sent successfully', messageSid: message.sid })
     };
 
   } catch (err) {
@@ -84,7 +73,5 @@ exports.handler = async function(event, context) {
       statusCode: 500,
       body: JSON.stringify({ error: err.message })
     };
-  }
-};
   }
 };
