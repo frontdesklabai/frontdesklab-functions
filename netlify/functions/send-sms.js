@@ -62,9 +62,17 @@ exports.handler = async function(event, context) {
 
     console.log('SMS sent. SID:', message.sid);
 
-    return {
+return {
       statusCode: 200,
-      body: JSON.stringify({ result: 'SMS sent successfully', messageSid: message.sid })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        results: [
+          {
+            toolCallId: body?.message?.toolCallList?.[0]?.id || body?.message?.toolCalls?.[0]?.id || 'unknown',
+            result: 'SMS sent successfully with Calendly link.'
+          }
+        ]
+      })
     };
 
   } catch (err) {
